@@ -1,0 +1,61 @@
+import { supabase } from "@/integrations/supabase/client";
+
+export interface UserRow {
+  id: string;
+  name: string;
+  email: string;
+  role: "admin" | "user";
+  created_at: string;
+}
+
+export async function listUsers(): Promise<UserRow[]> {
+  const { data: profiles, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  const { data: roles, error: e2 } = await supabase
+    .from("user_roles")
+    .select("user_id, role");
+  if (e2) throw e2;
+
+  return (profiles ?? []).map((p) => {
+    const userRoles = (roles ?? []).filter((r) => r.user_id === p.id);
+    const role = userRoles.some((r) => r.role === "admin") ? "admin" : "user";
+    return {
+      id: p.id,
+      name: p.name,
+      email: p.email,
+      role,
+      created_at: p.created_at,
+    };
+  });
+}
+
+export async function adminCreateUser(input: {
+  email: string;
+  password: string;
+  name: string;
+  role: "admin" | "user";
+}) {
+  const { data, error } = await supabase.functions.invoke("admin-create-user", {
+    body: input,
+  });
+  if (error) throw error;
+  if ((data as any)?.error) throw new Error((data as any).error);
+  return data;
+}
+
+export async function adminUpdateUser(input: {
+  user_id: string;
+  name?: string;
+  role?: "admin" | "user";
+  password?: string;
+}) {
+  const { data, error } = await supabase.functions.invoke("admin-update-user", {
+    body: input,
+  });
+  if (error) throw error;
+  if ((data as any)?.error) throw new Error((data as any).error);
+  return data;
+}
