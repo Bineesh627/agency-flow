@@ -1,0 +1,190 @@
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { adminCreateUser, adminUpdateUser, listUsers, type UserRow } from "@/services/users";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { Plus, Shield, User as UserIcon } from "lucide-react";
+import { toast } from "sonner";
+
+interface CreateValues {
+  email: string; name: string; password: string; role: "admin" | "user";
+}
+interface EditValues {
+  name: string; role: "admin" | "user"; password: string;
+}
+
+const Users = () => {
+  const qc = useQueryClient();
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editing, setEditing] = useState<UserRow | null>(null);
+
+  const usersQ = useQuery({ queryKey: ["users"], queryFn: listUsers });
+
+  const createForm = useForm<CreateValues>({ defaultValues: { role: "user" } });
+  const editForm = useForm<EditValues>();
+
+  const createMut = useMutation({
+    mutationFn: adminCreateUser,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["users"] });
+      toast.success("User created");
+      setCreateOpen(false); createForm.reset({ role: "user" });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const updateMut = useMutation({
+    mutationFn: (input: { user_id: string; name?: string; role?: "admin" | "user"; password?: string }) =>
+      adminUpdateUser(input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["users"] });
+      toast.success("User updated");
+      setEditing(null); editForm.reset();
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const openEdit = (u: UserRow) => {
+    setEditing(u);
+    editForm.reset({ name: u.name, role: u.role, password: "" });
+  };
+
+  return (
+    <div className="p-6 md:p-8 max-w-6xl mx-auto animate-fade-in">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-semibold">Users</h1>
+          <p className="text-sm text-muted-foreground mt-1">Create and manage team members</p>
+        </div>
+        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+          <DialogTrigger asChild>
+            <Button><Plus className="h-4 w-4 mr-2" /> New user</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Create user</DialogTitle></DialogHeader>
+            <form onSubmit={createForm.handleSubmit((v) => createMut.mutate(v))} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Input id="name" {...createForm.register("name", { required: true, maxLength: 100 })} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" {...createForm.register("email", { required: true, maxLength: 255 })} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Temporary password</Label>
+                <Input id="password" type="text" {...createForm.register("password", { required: true, minLength: 8, maxLength: 128 })} />
+                <p className="text-xs text-muted-foreground">Min 8 characters. Share with the user securely.</p>
+              </div>
+              <div className="space-y-2">
+                <Label>Role</Label>
+                <Select
+                  value={createForm.watch("role")}
+                  onValueChange={(v) => createForm.setValue("role", v as "admin" | "user")}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">User</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <DialogFooter>
+                <Button type="submit" disabled={createMut.isPending}>Create</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="card-elevated overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="text-xs text-muted-foreground bg-muted/40">
+            <tr>
+              <th className="text-left px-6 py-3">Name</th>
+              <th className="text-left px-6 py-3">Email</th>
+              <th className="text-left px-6 py-3">Role</th>
+              <th className="text-left px-6 py-3">Created</th>
+              <th className="text-right px-6 py-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(usersQ.data ?? []).map((u) => (
+              <tr key={u.id} className="border-t border-border">
+                <td className="px-6 py-3 font-medium">{u.name || "—"}</td>
+                <td className="px-6 py-3 text-muted-foreground">{u.email}</td>
+                <td className="px-6 py-3">
+                  <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-md ${
+                    u.role === "admin" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                  }`}>
+                    {u.role === "admin" ? <Shield className="h-3 w-3" /> : <UserIcon className="h-3 w-3" />}
+                    {u.role}
+                  </span>
+                </td>
+                <td className="px-6 py-3 text-muted-foreground">{new Date(u.created_at).toLocaleDateString()}</td>
+                <td className="px-6 py-3 text-right">
+                  <Button variant="ghost" size="sm" onClick={() => openEdit(u)}>Edit</Button>
+                </td>
+              </tr>
+            ))}
+            {(usersQ.data ?? []).length === 0 && !usersQ.isLoading && (
+              <tr><td colSpan={5} className="px-6 py-8 text-center text-muted-foreground">No users yet</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Edit user</DialogTitle></DialogHeader>
+          {editing && (
+            <form
+              onSubmit={editForm.handleSubmit((v) => {
+                const payload: any = { user_id: editing.id, name: v.name, role: v.role };
+                if (v.password) payload.password = v.password;
+                updateMut.mutate(payload);
+              })}
+              className="space-y-4"
+            >
+              <div className="space-y-2">
+                <Label>Name</Label>
+                <Input {...editForm.register("name", { required: true, maxLength: 100 })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Role</Label>
+                <Select
+                  value={editForm.watch("role")}
+                  onValueChange={(v) => editForm.setValue("role", v as "admin" | "user")}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">User</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>New password (optional)</Label>
+                <Input type="text" {...editForm.register("password", { maxLength: 128 })} />
+                <p className="text-xs text-muted-foreground">Leave blank to keep current password.</p>
+              </div>
+              <DialogFooter>
+                <Button type="submit" disabled={updateMut.isPending}>Save</Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default Users;
