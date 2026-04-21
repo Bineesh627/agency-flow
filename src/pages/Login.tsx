@@ -6,8 +6,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import logo from "@/assets/img/logo.png";
 
 interface FormValues {
   email: string;
@@ -19,6 +20,7 @@ const Login = () => {
   const location = useLocation();
   const { user, isLoading } = useAuth();
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { register, handleSubmit, formState: { errors } } = useForm<FormValues>();
 
   if (!isLoading && user) {
@@ -48,11 +50,12 @@ const Login = () => {
       <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-secondary/30 blur-[120px] animate-pulse-glow" />
 
       <div className="w-full max-w-md relative z-10 animate-fade-in">
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="h-12 w-12 rounded-xl bg-gradient-primary flex items-center justify-center glow-primary">
-            <Sparkles className="h-6 w-6 text-primary-foreground" />
+        <div className="flex items-center justify-center gap-3 mb-8">
+          <img src={logo} alt="CorePro Techno LLP" className="h-14 w-14 rounded-xl object-contain glow-primary" />
+          <div className="flex flex-col leading-tight">
+            <span className="text-3xl font-bold text-gradient">CorePro</span>
+            <span className="text-lg font-semibold text-muted-foreground">Techno LLP</span>
           </div>
-          <h1 className="text-3xl font-bold text-gradient">Agency PM</h1>
         </div>
         <div className="card-glass p-8">
           <h2 className="text-2xl font-bold mb-1">Sign in</h2>
@@ -75,12 +78,23 @@ const Login = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                {...register("password", { required: "Password is required" })}
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  className="pr-10"
+                  {...register("password", { required: "Password is required" })}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((p) => !p)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
               {errors.password && (
                 <p className="text-xs text-destructive">{errors.password.message}</p>
               )}

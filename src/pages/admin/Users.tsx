@@ -11,7 +11,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Plus, Shield, User as UserIcon } from "lucide-react";
+import { Plus, Shield, User as UserIcon, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 interface CreateValues {
@@ -25,6 +25,8 @@ const Users = () => {
   const qc = useQueryClient();
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<UserRow | null>(null);
+  const [showCreatePw, setShowCreatePw] = useState(false);
+  const [showEditPw, setShowEditPw] = useState(false);
 
   const usersQ = useQuery({ queryKey: ["users"], queryFn: listUsers });
 
@@ -81,7 +83,22 @@ const Users = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Temporary password</Label>
-                <Input id="password" type="text" {...createForm.register("password", { required: true, minLength: 8, maxLength: 128 })} />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showCreatePw ? "text" : "password"}
+                    className="pr-10"
+                    {...createForm.register("password", { required: true, minLength: 8, maxLength: 128 })}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCreatePw((p) => !p)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showCreatePw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
                 <p className="text-xs text-muted-foreground">Min 8 characters. Share with the user securely.</p>
               </div>
               <div className="space-y-2">
@@ -173,7 +190,21 @@ const Users = () => {
               </div>
               <div className="space-y-2">
                 <Label>New password (optional)</Label>
-                <Input type="text" {...editForm.register("password", { maxLength: 128 })} />
+                <div className="relative">
+                  <Input
+                    type={showEditPw ? "text" : "password"}
+                    className="pr-10"
+                    {...editForm.register("password", { maxLength: 128 })}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowEditPw((p) => !p)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showEditPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
                 <p className="text-xs text-muted-foreground">Leave blank to keep current password.</p>
               </div>
               <DialogFooter>

@@ -1,3 +1,10 @@
-# Welcome to your Lovable project
+# Agency Flow
 
-TODO: Document your project here
+Internal agency project & task management platform built with React, Vite, Supabase, and Tailwind CSS.
+
+## Getting Started
+
+```bash
+npm install
+npm run dev
+```
