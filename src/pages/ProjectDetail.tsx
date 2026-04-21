@@ -177,6 +177,9 @@ const ProjectDetail = () => {
           <TabsTrigger value="documents" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-primary-foreground">
             <Folder className="h-4 w-4 mr-2" /> Documents
           </TabsTrigger>
+          <TabsTrigger value="members" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-primary-foreground">
+            <UsersIcon className="h-4 w-4 mr-2" /> Members
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="kanban" className="mt-6">
@@ -252,6 +255,10 @@ const ProjectDetail = () => {
 
         <TabsContent value="documents" className="mt-6">
           <ProjectDocuments projectId={id!} isAdmin={isAdmin} />
+        </TabsContent>
+
+        <TabsContent value="members" className="mt-6">
+          <ProjectMembers projectId={id!} isAdmin={isAdmin} />
         </TabsContent>
       </Tabs>
     </div>
