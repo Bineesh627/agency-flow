@@ -5,8 +5,10 @@ import {
   getMyAttendanceHistory, getTodayAttendance, withinWindow,
 } from "@/services/attendance";
 import { Button } from "@/components/ui/button";
-import { Clock, LogIn, LogOut, AlertCircle } from "lucide-react";
+import { Clock, LogIn, LogOut, AlertCircle, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
+import { Link } from "react-router-dom";
 
 const StatusPill = ({ status }: { status: string | null | undefined }) => {
   const map: Record<string, string> = {
@@ -25,6 +27,7 @@ const StatusPill = ({ status }: { status: string | null | undefined }) => {
 const Attendance = () => {
   const qc = useQueryClient();
   const [now, setNow] = useState(new Date());
+  const { isAdmin } = useAuth();
 
   // Refresh every second so the live clock + button state stay accurate.
   useEffect(() => {
@@ -33,8 +36,8 @@ const Attendance = () => {
   }, []);
 
   const settingsQ = useQuery({ queryKey: ["att-settings"], queryFn: getAttendanceSettings });
-  const todayQ = useQuery({ queryKey: ["today-attendance"], queryFn: getTodayAttendance });
-  const histQ = useQuery({ queryKey: ["att-history"], queryFn: getMyAttendanceHistory });
+  const todayQ = useQuery({ queryKey: ["today-attendance"], queryFn: getTodayAttendance, enabled: !isAdmin });
+  const histQ = useQuery({ queryKey: ["att-history"], queryFn: getMyAttendanceHistory, enabled: !isAdmin });
 
   const checkInMut = useMutation({
     mutationFn: checkIn,
