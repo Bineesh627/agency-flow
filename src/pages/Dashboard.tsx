@@ -248,11 +248,50 @@ export function StatusBadge({ status }: { status: string }) {
     todo: "bg-muted text-muted-foreground",
     in_progress: "bg-warning/15 text-warning",
     done: "bg-success/15 text-success",
+    present: "bg-success/15 text-success",
+    late: "bg-warning/15 text-warning",
+    half_day: "bg-warning/15 text-warning",
+    absent: "bg-muted text-muted-foreground",
   };
   return (
     <Badge variant="outline" className={`${map[status] ?? ""} border-0 capitalize`}>
       {status.replace("_", " ")}
     </Badge>
+  );
+}
+
+function QuickLink({
+  to, label, desc, icon: Icon,
+}: { to: string; label: string; desc: string; icon: any }) {
+  return (
+    <Link
+      to={to}
+      className="card-glass p-4 flex items-center gap-3 group hover:border-primary/40 transition-colors"
+    >
+      <div className="h-10 w-10 rounded-lg bg-gradient-primary opacity-80 group-hover:opacity-100 group-hover:glow-primary transition-all flex items-center justify-center shrink-0">
+        <Icon className="h-4 w-4 text-primary-foreground" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="text-sm font-semibold group-hover:text-primary transition-colors">{label}</div>
+        <div className="text-xs text-muted-foreground truncate">{desc}</div>
+      </div>
+      <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+    </Link>
+  );
+}
+
+const TONES: Record<string, string> = {
+  success: "bg-success/10 text-success border-success/20",
+  warning: "bg-warning/10 text-warning border-warning/20",
+  muted: "bg-muted/40 text-muted-foreground border-border/40",
+};
+
+function MiniStat({ label, value, tone = "muted" }: { label: string; value: number; tone?: keyof typeof TONES }) {
+  return (
+    <div className={`rounded-lg border px-3 py-2 ${TONES[tone] ?? TONES.muted}`}>
+      <div className="text-[10px] uppercase tracking-wider opacity-80">{label}</div>
+      <div className="text-xl font-bold">{value}</div>
+    </div>
   );
 }
 
