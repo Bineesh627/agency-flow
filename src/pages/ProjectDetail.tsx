@@ -20,10 +20,11 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Plus, ArrowLeft, Trash2, KanbanSquare, GanttChart, Folder } from "lucide-react";
+import { Plus, ArrowLeft, Trash2, KanbanSquare, GanttChart, Folder, Users as UsersIcon } from "lucide-react";
 import { toast } from "sonner";
 import { ProjectTimeline } from "@/components/projects/ProjectTimeline";
 import { ProjectDocuments } from "@/components/projects/ProjectDocuments";
+import { ProjectMembers } from "@/components/projects/ProjectMembers";
 
 interface FormValues {
   title: string;
@@ -140,11 +141,21 @@ const ProjectDetail = () => {
                   <Select value={watch("assigned_to")} onValueChange={(v) => setValue("assigned_to", v)}>
                     <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
                     <SelectContent>
-                      {(usersQ.data ?? []).map((u) => (
-                        <SelectItem key={u.id} value={u.id}>{u.name || u.email}</SelectItem>
-                      ))}
+                      {(usersQ.data ?? [])
+                        .filter((u) => u.role !== "admin")
+                        .map((u) => (
+                          <SelectItem key={u.id} value={u.id}>{u.name || u.email}</SelectItem>
+                        ))}
+                      {(usersQ.data ?? []).filter((u) => u.role !== "admin").length === 0 && (
+                        <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                          No regular users available. Create one in Users.
+                        </div>
+                      )}
                     </SelectContent>
                   </Select>
+                  <p className="text-[11px] text-muted-foreground">
+                    Tasks can only be assigned to non-admin users.
+                  </p>
                 </div>
                 <DialogFooter>
                   <Button type="submit" className="btn-gradient" disabled={createMut.isPending}>Create</Button>
