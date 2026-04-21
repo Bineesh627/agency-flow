@@ -115,7 +115,64 @@ const AdminAttendance = () => {
               className="space-y-2 text-xs"
             >
               <Field label="Timezone">
-                <Input defaultValue={settingsQ.data.timezone} {...register("timezone", { required: true })} />
+                {/* Hidden RHF-registered input — value driven by the Select below */}
+                <input
+                  type="hidden"
+                  defaultValue={settingsQ.data.timezone}
+                  {...register("timezone", { required: true })}
+                />
+                <div className="flex gap-2">
+                  <Select
+                    value={tzValue}
+                    onValueChange={(v) =>
+                      setValue("timezone", v, { shouldDirty: true, shouldValidate: true })
+                    }
+                  >
+                    <SelectTrigger className="h-9 flex-1">
+                      <SelectValue placeholder="Select timezone" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-72">
+                      <div className="px-2 pt-2 pb-1 sticky top-0 bg-popover z-10">
+                        <Input
+                          autoFocus
+                          placeholder="Search timezone…"
+                          value={tzFilter}
+                          onChange={(e) => setTzFilter(e.target.value)}
+                          onKeyDown={(e) => e.stopPropagation()}
+                          className="h-8 text-xs"
+                        />
+                      </div>
+                      {allTimezones
+                        .filter((tz) =>
+                          tz.toLowerCase().includes(tzFilter.toLowerCase()),
+                        )
+                        .slice(0, 200)
+                        .map((tz) => (
+                          <SelectItem key={tz} value={tz} className="text-xs">
+                            {tz}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-9 shrink-0"
+                    onClick={() =>
+                      setValue("timezone", getBrowserTimezone(), {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      })
+                    }
+                    title="Use browser timezone"
+                  >
+                    <Globe className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Current: <span className="font-medium">{tzValue}</span>
+                </p>
               </Field>
               <div className="grid grid-cols-2 gap-2">
                 <Field label="Check-in start">
